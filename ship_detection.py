@@ -1,3 +1,8 @@
+#image analysis project from vtx
+#add training dataset from kaggle project
+#https://www.kaggle.com/rhammell/ships-in-satellite-imagery
+#paper https://www.irjet.net/archives/V6/i9/IRJET-V6I9291.pdf
+
 import numpy as np
 import matplotlib.pylab as plt
 import pandas as pd
