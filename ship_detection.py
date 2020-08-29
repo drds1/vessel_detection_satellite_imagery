@@ -173,26 +173,26 @@ if __name__ == '__main__':
     X_test_norm = X_test/norm
 
     # define the model
-    new_model = False
-    picklefile = './models/custom_convnet.pickle'
-    if new_model is True:
-        model = define_custom_convnet()
-
-        # fit the model
-        model.fit(X_train_norm, y_train,
-                  batch_size=32,
-                  epochs=18,
-                  validation_split=0.2,
-                  shuffle=True,
-                  verbose=2)
-
-        #pickle the fitted model
-        os.system('rm ' + picklefile)
-        pickle_out = open(picklefile, "wb")
-        pickle.dump({'model': model}, pickle_out)
-        pickle_out.close()
-    else:
-        model = pickle.load(open(picklefile, "rb"))['model']
+    #new_model = False
+    #picklefile = './models/custom_convnet.pickle'
+    #if new_model is True:
+    #    model = define_custom_convnet()
+#
+    #    # fit the model
+    #    model.fit(X_train_norm, y_train,
+    #              batch_size=32,
+    #              epochs=18,
+    #              validation_split=0.2,
+    #              shuffle=True,
+    #              verbose=2)
+#
+    #    #pickle the fitted model
+    #    os.system('rm ' + picklefile)
+    #    pickle_out = open(picklefile, "wb")
+    #    pickle.dump({'model': model}, pickle_out)
+    #    pickle_out.close()
+    #else:
+    #    model = pickle.load(open(picklefile, "rb"))['model']
 
 
     # fit model on test data
@@ -202,10 +202,17 @@ if __name__ == '__main__':
     #now try resnet 50 transfer learning model
     #resnet 50 needs image sizes to be 224 x 224
     #use python image library PIL to resize
-    X_train_norm_resize = convert_image_dimensions(X_train_norm, newsize=(224, 224))
+    plot_example_rgb(X_train_norm[0, :, :, :], savefile='testpre.png')
+    img = Image.fromarray(np.asarray(X_train_norm[0, :, :, :]), mode='RGB')
+    img.save('testimg.png')
+    img2 = img.resize((224,224), Image.ANTIALIAS)
+    img2.save('testimg2.png')
+    #X_train_norm_resize[i, :, :, :] = np.array(img2)
 
-    plot_example_rgb(X_train_norm[0,:,:,:], savefile='normed_image_example.png')
-    plot_example_rgb(X_train_norm_resize[0, :, :, :], savefile='normed_resized_image_example.png')
+    #X_train_norm_resize = convert_image_dimensions(X_train_norm, newsize=(224, 224))
+
+    #plot_example_rgb(X_train_norm[0,:,:,:], savefile='normed_image_example.png')
+    #plot_example_rgb(X_train_norm_resize[0, :, :, :], savefile='normed_resized_image_example.png')
 
     #base_model = applications.resnet50.ResNet50(weights=None, include_top=False, input_shape=(img_height, img_width, 3))
     #resnet = ResNet50(weights='imagenet',input_shape=(64, 64, 3))
