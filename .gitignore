@@ -131,4 +131,6 @@ dmypy.json
 
 /data
 data
+/models
+models
 

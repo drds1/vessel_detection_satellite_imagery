@@ -10,6 +10,10 @@ import glob
 import json
 from sklearn.model_selection import train_test_split
 import keras
+import pickle
+import os
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.pipeline import Pipeline
 
 def get_label_from_filename(data_dir = './data/images/shipsnet/shipsnet/'):
     '''
@@ -136,11 +140,7 @@ if __name__ == '__main__':
     # the target is a 2d array of the probability
     # that the image is a ship or isnt a ship
     # need to construct this 2d prob array
-    y = np.zeros((len(target),2))
-    y[target == 1, 0] = 1
-    y[target == 0, 1] = 1
-
-
+    y = keras.utils.np_utils.to_categorical(target)
 
     # plot image file
     plot_example_rgb(X[0], savefile = 'example_input.png')
@@ -150,11 +150,46 @@ if __name__ == '__main__':
                                                         test_size = 0.33,
                                                         random_state = 42)
 
-    # define the model
-    model = define_custom_convnet()
+    #transform by dividing through by minimum value
+    norm = X_train.max()
+    X_train_norm = X_train/norm
+    X_test_norm = X_test/norm
 
-    # fit the model
-    model.fit(X_train, y_train)
+    # define the model
+    new_model = False
+    picklefile = './models/custom_convnet.pickle'
+    if new_model is True:
+        model = define_custom_convnet()
+
+        # fit the model
+        model.fit(X_train_norm, y_train,
+                  batch_size=32,
+                  epochs=18,
+                  validation_split=0.2,
+                  shuffle=True,
+                  verbose=2)
+
+        #pickle the fitted model
+        os.system('rm ' + picklefile)
+        pickle_out = open(picklefile, "wb")
+        pickle.dump({'model': model}, pickle_out)
+        pickle_out.close()
+    else:
+        model = pickle.load(open(picklefile, "rb"))['model']
+
+
+    # fit model on test data
+
+
+
+
+
+    # analyse performance using ROC curve
+
+
+
+
+
 
 
 
