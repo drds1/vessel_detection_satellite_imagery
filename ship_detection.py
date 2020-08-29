@@ -48,11 +48,12 @@ def load_data_from_json(file = './data/shipsnet.json'):
     weight = 80
     height = 80
     X = input_data.reshape([-1, n_spectrum, weight, height])
+    X = np.transpose(X, (0, 2, 3, 1))
     return X, output_data
 
 
 
-def plot_example_rgb(pic, savefile=False):
+def plot_example_rgb(pic, savefile=None):
     '''
     input example X image pic[X,Y,z]
     :return:
@@ -77,7 +78,7 @@ def plot_example_rgb(pic, savefile=False):
 
     plt.subplot(1, 3, 3)
     plt.imshow(blue_spectum)
-    if savefile is False:
+    if savefile is None:
         plt.show()
     else:
         plt.savefig(savefile)
@@ -130,10 +131,19 @@ def define_custom_convnet():
 if __name__ == '__main__':
 
     # download dataset from json object
-    X, y = load_data_from_json(file = './data/shipsnet.json')
+    X, target = load_data_from_json(file = './data/shipsnet.json')
+
+    # the target is a 2d array of the probability
+    # that the image is a ship or isnt a ship
+    # need to construct this 2d prob array
+    y = np.zeros((len(target),2))
+    y[target == 1, 0] = 1
+    y[target == 0, 1] = 1
+
+
 
     # plot image file
-    plot_example_rgb(X[0], savefile='example_input.png')
+    plot_example_rgb(X[0], savefile = 'example_input.png')
 
     # split into train test data
     X_train, X_test, y_train, y_test = train_test_split(X, y,
