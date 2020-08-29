@@ -12,8 +12,10 @@ from sklearn.model_selection import train_test_split
 import keras
 import pickle
 import os
+from PIL import Image
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.pipeline import Pipeline
+from keras.applications.resnet50 import ResNet50
 
 def get_label_from_filename(data_dir = './data/images/shipsnet/shipsnet/'):
     '''
@@ -66,9 +68,9 @@ def plot_example_rgb(pic, savefile=None):
     # get one chanel
     #pic = X[0]
     plt.close()
-    rad_spectrum = pic[0]
-    green_spectrum = pic[1]
-    blue_spectum = pic[2]
+    rad_spectrum = pic[:,:,0]
+    green_spectrum = pic[:,:,1]
+    blue_spectum = pic[:,:,2]
 
     plt.figure(2, figsize=(5 * 3, 5 * 1))
     plt.set_cmap('jet')
@@ -131,6 +133,21 @@ def define_custom_convnet():
     return model
 
 
+def convert_image_dimensions(X_train_norm, newsize=(224,224)):
+    '''
+    resize image using PIL (resnet 50 needs 224 by 224)
+    :param X_train_norm:
+    :param newsize:
+    :return:
+    '''
+    N = np.shape(X_train_norm)[0]
+    X_train_norm_resize = np.zeros((N,newsize[0],newsize[1],3))
+    for i in range(N):
+        img = Image.fromarray(X_train_norm[i, :, :, :], mode='RGB')
+        img2 = img.resize(newsize, Image.ANTIALIAS)
+        X_train_norm_resize[i,:,:,:] = np.array(img2)
+    return X_train_norm_resize
+
 
 if __name__ == '__main__':
 
@@ -182,11 +199,19 @@ if __name__ == '__main__':
 
 
 
+    #now try resnet 50 transfer learning model
+    #resnet 50 needs image sizes to be 224 x 224
+    #use python image library PIL to resize
+    X_train_norm_resize = convert_image_dimensions(X_train_norm, newsize=(224, 224))
+
+    plot_example_rgb(X_train_norm[0,:,:,:], savefile='normed_image_example.png')
+    plot_example_rgb(X_train_norm_resize[0, :, :, :], savefile='normed_resized_image_example.png')
+
+    #base_model = applications.resnet50.ResNet50(weights=None, include_top=False, input_shape=(img_height, img_width, 3))
+    #resnet = ResNet50(weights='imagenet',input_shape=(64, 64, 3))
 
 
     # analyse performance using ROC curve
-
-
 
 
 
