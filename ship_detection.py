@@ -143,7 +143,9 @@ def convert_image_dimensions(X_train_norm, newsize=(224,224)):
     N = np.shape(X_train_norm)[0]
     X_train_norm_resize = np.zeros((N,newsize[0],newsize[1],3))
     for i in range(N):
-        img = Image.fromarray(X_train_norm[i, :, :, :], mode='RGB')
+        x = np.array(X_train_norm[i, :, :, :])
+        xn = np.uint8( x / x.max()* 255 )
+        img = Image.fromarray(xn, mode='RGB')
         img2 = img.resize(newsize, Image.ANTIALIAS)
         X_train_norm_resize[i,:,:,:] = np.array(img2)
     return X_train_norm_resize
@@ -202,17 +204,9 @@ if __name__ == '__main__':
     #now try resnet 50 transfer learning model
     #resnet 50 needs image sizes to be 224 x 224
     #use python image library PIL to resize
-    plot_example_rgb(X_train_norm[0, :, :, :], savefile='testpre.png')
-    img = Image.fromarray(np.asarray(X_train_norm[0, :, :, :]), mode='RGB')
-    img.save('testimg.png')
-    img2 = img.resize((224,224), Image.ANTIALIAS)
-    img2.save('testimg2.png')
-    #X_train_norm_resize[i, :, :, :] = np.array(img2)
-
-    #X_train_norm_resize = convert_image_dimensions(X_train_norm, newsize=(224, 224))
-
-    #plot_example_rgb(X_train_norm[0,:,:,:], savefile='normed_image_example.png')
-    #plot_example_rgb(X_train_norm_resize[0, :, :, :], savefile='normed_resized_image_example.png')
+    X_train_norm_resize = convert_image_dimensions(X_train_norm, newsize=(224, 224))
+    plot_example_rgb(X_train_norm[0,:,:,:], savefile='normed_image_example.png')
+    plot_example_rgb(X_train_norm_resize[0, :, :, :], savefile='normed_resized_image_example.png')
 
     #base_model = applications.resnet50.ResNet50(weights=None, include_top=False, input_shape=(img_height, img_width, 3))
     #resnet = ResNet50(weights='imagenet',input_shape=(64, 64, 3))
