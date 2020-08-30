@@ -131,8 +131,29 @@ def define_custom_convnet():
         loss='categorical_crossentropy',
         optimizer=sgd,
         metrics=['accuracy'])
-
     return model
+
+
+def define_resnet_model():
+    '''
+
+    :return:
+    '''
+    base_model = ResNet50(weights='imagenet')
+    base_model.trainable = False
+    output_model = keras.Sequential()
+    output_model.add(keras.layers.GlobalAveragePooling2D())
+    output_model.add(keras.layers.Dense(32, activation='relu'))
+    output_model.add(keras.layers.Dense(2, activation='softmax'))
+    tl_model = keras.Sequential()
+    tl_model.add(base_model)
+    tl_model.add(output_model)
+    sgd = keras.optimizers.SGD(lr=0.01, momentum=0.9, nesterov=True)
+    tl_model.compile(
+        loss='categorical_crossentropy',
+        optimizer=sgd,
+        metrics=['accuracy'])
+    return tl_model
 
 
 def convert_image_dimensions(X_train_norm, newsize=(224,224)):
@@ -203,6 +224,33 @@ def diagnostic_plots(y_pred_probs,y_test_probs,
     plt.tight_layout()
     plt.savefig(diagnostic_file)
 
+
+def fit_load_model(new_model=False,
+                   picklefile='./models/custom_convnet.pickle',
+                   input_model=define_custom_convnet()):
+    '''
+    fit or load a new model from file
+    :return:
+    '''
+    if new_model is True:
+        model = input_model
+        # fit the model
+        model.fit(X_train_norm, y_train,
+                  batch_size=32,
+                  epochs=18,
+                  validation_split=0.2,
+                  shuffle=True,
+                  verbose=2)
+        # pickle the fitted model
+        os.system('rm ' + picklefile)
+        pickle_out = open(picklefile, "wb")
+        pickle.dump({'model': model}, pickle_out)
+        pickle_out.close()
+    else:
+        model = pickle.load(open(picklefile, "rb"))['model']
+    return model
+
+
 if __name__ == '__main__':
 
     # download dataset from json object
@@ -266,11 +314,15 @@ if __name__ == '__main__':
     plot_example_rgb(X_train_norm[0,:,:,:], savefile='normed_image_example.png')
     plot_example_rgb(X_train_norm_resize[0, :, :, :], savefile='normed_resized_image_example.png')
 
-    #base_model = applications.resnet50.ResNet50(weights=None, include_top=False, input_shape=(img_height, img_width, 3))
-    #resnet = ResNet50(weights='imagenet',input_shape=(64, 64, 3))
+    #assemble model using transfer learning approach using resnet50 and output sequential mode
+    tl_model = define_resnet_model()
+    tl_model = fit_load_model(new_model=True,
+                   picklefile ='./models/tl_resnet.pickle',
+                   input_model= tl_model)
 
 
     # analyse performance using ROC curve
+
 
 
 
