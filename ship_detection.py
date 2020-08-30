@@ -13,6 +13,8 @@ import keras
 import pickle
 import os
 from PIL import Image
+from sklearn import metrics
+from sklearn.metrics import plot_confusion_matrix
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.pipeline import Pipeline
 from keras.applications.resnet50 import ResNet50
@@ -150,6 +152,56 @@ def convert_image_dimensions(X_train_norm, newsize=(224,224)):
         X_train_norm_resize[i,:,:,:] = np.array(img2)
     return X_train_norm_resize
 
+def diagnostic_plots(y_pred_probs,y_test_probs,
+                     labels_in = None,
+                     diagnostic_file = 'roc_plot.png',
+                     max_fpr_tollerance = 0.01):
+    '''
+
+    :return:
+    '''
+    # fit model on test data
+    fpr, tpr, thresholds = metrics.roc_curve(y_test_probs[:, 0], y_pred_probs[:, 0], pos_label=1)
+    auc = metrics.auc(fpr, tpr)
+    idx = np.argsort(fpr)
+    fpr = fpr[idx]
+    tpr = tpr[idx]
+    thresholds = thresholds[idx]
+    idx_threshold = np.where(fpr > max_fpr_tollerance)[0][0]
+    threshold_tollerance = thresholds[idx_threshold]
+    print('ROC curve AUC = ' + str(auc))
+    fig = plt.figure()
+    ax1 = fig.add_subplot(211)
+    ax1.set_xlabel('False Positive Rate')
+    ax1.set_ylabel('True Positive Rate')
+    ann = 'threshold probability P(FPR=' + str(max_fpr_tollerance) + ') = ' \
+          + str(np.round(threshold_tollerance, 2)) + \
+          '\n TPR = ' + str(np.round(tpr[idx_threshold], 2))
+    ax1.axvline(fpr[idx_threshold], label=ann, color='b')
+    ax1.plot(fpr, tpr, label='AUC = ' + str(np.round(auc, 2)), color='r')
+    ax1.set_title('model ROC curve')
+    ax1.legend()
+
+    # now add confusion matrix for tollerance result
+    cm = metrics.confusion_matrix(np.argmax(y_test, axis=1), np.argmax(y_pred, axis=1))
+    cmn = cm / cm.sum(axis=1)[:, np.newaxis]
+    ax2 = fig.add_subplot(2, 2, 3)
+    b = ax2.imshow(cmn, cmap='Blues')
+    cbar = fig.colorbar(b)
+    cbar.set_label('Normalised Counts')
+    if labels_in is None:
+        labels = list(np.array(np.unique(y_test), dtype=str))
+    else:
+        labels = labels_in
+    ax2.set_xlabel('Predicted')
+    ax2.set_ylabel('Actual')
+    ax2.set_title('Confusion Matrix \nP(FPR=' + str(max_fpr_tollerance) + ')')
+    ax2.set_xticks = np.arange(len(labels))
+    ax2.set_xticklabels = labels
+    ax2.set_yticks = np.arange(len(labels))
+    ax2.set_yticklabels = labels
+    plt.tight_layout()
+    plt.savefig(diagnostic_file)
 
 if __name__ == '__main__':
 
@@ -175,29 +227,35 @@ if __name__ == '__main__':
     X_test_norm = X_test/norm
 
     # define the model
-    #new_model = False
-    #picklefile = './models/custom_convnet.pickle'
-    #if new_model is True:
-    #    model = define_custom_convnet()
+    new_model = False
+    picklefile = './models/custom_convnet.pickle'
+    if new_model is True:
+        model = define_custom_convnet()
 #
-    #    # fit the model
-    #    model.fit(X_train_norm, y_train,
-    #              batch_size=32,
-    #              epochs=18,
-    #              validation_split=0.2,
-    #              shuffle=True,
-    #              verbose=2)
+        # fit the model
+        model.fit(X_train_norm, y_train,
+                  batch_size=32,
+                  epochs=18,
+                  validation_split=0.2,
+                  shuffle=True,
+                  verbose=2)
 #
-    #    #pickle the fitted model
-    #    os.system('rm ' + picklefile)
-    #    pickle_out = open(picklefile, "wb")
-    #    pickle.dump({'model': model}, pickle_out)
-    #    pickle_out.close()
-    #else:
-    #    model = pickle.load(open(picklefile, "rb"))['model']
+        #pickle the fitted model
+        os.system('rm ' + picklefile)
+        pickle_out = open(picklefile, "wb")
+        pickle.dump({'model': model}, pickle_out)
+        pickle_out.close()
+    else:
+        model = pickle.load(open(picklefile, "rb"))['model']
 
 
     # fit model on test data
+    y_pred = model.predict(X_test_norm)
+    diagnostic_plots(y_pred, y_test,
+                     labels_in=None,
+                     diagnostic_file='roc_plot.png',
+                     max_fpr_tollerance=0.01)
+
 
 
 
