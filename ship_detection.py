@@ -330,13 +330,18 @@ if __name__ == '__main__':
         metrics=['accuracy'])
 
     #assemble model using transfer learning approach using resnet50 and output sequential mode
-    #tl_model = define_resnet_model()
-    #tl_model = fit_load_model(new_model=True,
-    #               picklefile ='./models/tl_resnet.pickle',
-    #               input_model= tl_model)
+    tl_model = define_resnet_model()
+    tl_model = fit_load_model(new_model=True,
+                   picklefile ='./models/tl_resnet.pickle',
+                   input_model= tl_model)
 
+    # fit model on test data
+    y_pred_tl = tl_model.predict(X_test_norm)
+    diagnostic_plots(y_pred_tl, y_test,
+                     labels_in=None,
+                     diagnostic_file='roc_plot_tl.png',
+                     max_fpr_tollerance=0.01)
 
-    # analyse performance using ROC curve
 
 
 
