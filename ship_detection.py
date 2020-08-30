@@ -279,7 +279,7 @@ if __name__ == '__main__':
     model = define_custom_convnet()
     model = fit_load_model(X_train_norm, y_train,
                               new_model=False,
-                              picklefile='./models/tl_resnet.pickle',
+                              picklefile='./models/custom_convnet.pickle',
                               input_model=model)
 
     # score model on test data
