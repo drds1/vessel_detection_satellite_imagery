@@ -211,7 +211,8 @@ def fit_load_model(X_train_norm, y_train,
     return model
 
 
-def plot_example_classes(y_pred, y_test, N_examples = 3, filename='examples.png'):
+def plot_example_classes(X, y_pred=None, y_test=None, N_examples = 3, filename='examples.png',
+                         idx_custom = None, labels_custom = None):
     '''
     show some example classifications demonstrating where the CNN
     got it both right and wrong
@@ -221,26 +222,37 @@ def plot_example_classes(y_pred, y_test, N_examples = 3, filename='examples.png'
     :param filename:
     :return:
     '''
-    pred_class = np.argmax(y_pred, axis=1)
-    test_class = np.argmax(y_test, axis=1)
-    idx_FP = np.where((pred_class == 1) & (test_class == 0))[0]
-    idx_FN = np.where((pred_class == 0) & (test_class == 1))[0]
-    idx_TP = np.where((pred_class == 1) & (test_class == 1))[0]
-    idx_TN = np.where((pred_class == 0) & (test_class == 0))[0]
-    labels = ['True Positives', 'True Negatives', 'False Positives', 'False Negatives']
+    if y_pred is None and idx_custom is None:
+        raise Exception('one of y_pred or idx_custom must not be None')
+    if y_pred is not None:
+        pred_class = np.argmax(y_pred, axis=1)
+    if y_test is not None:
+        test_class = np.argmax(y_test, axis=1)
+    if idx_custom is None:
+        idx_FP = np.where((pred_class == 1) & (test_class == 0))[0]
+        idx_FN = np.where((pred_class == 0) & (test_class == 1))[0]
+        idx_TP = np.where((pred_class == 1) & (test_class == 1))[0]
+        idx_TN = np.where((pred_class == 0) & (test_class == 0))[0]
+        idx_groups = [idx_TP, idx_TN, idx_FP, idx_FN]
+    else:
+        idx_groups = idx_custom
+    if labels_custom is None:
+        labels = ['True Positives', 'True Negatives', 'False Positives', 'False Negatives']
+    else:
+        labels = labels_custom
     i = 0
-    fig, big_axes = plt.subplots(figsize=(15.0, 15.0), nrows=4, ncols=1, sharey=True)
+    fig, big_axes = plt.subplots(figsize=(15.0, 15.0), nrows=len(labels), ncols=1, sharey=True)
     itemp = 0
     for row, big_ax in enumerate(big_axes, start=1):
         big_ax.set_title(labels[itemp], fontsize=24)
         big_ax.tick_params(labelcolor=(1., 1., 1., 0.0), top='off', bottom='off', left='off', right='off')
         big_ax._frameon = False
         itemp += 1
-    for idx in [idx_TP, idx_TN, idx_FP, idx_FN]:
+    for idx in idx_groups:
         n = min(len(idx), N_examples)
         for i2 in range(n):
-            ax1 = fig.add_subplot(4, N_examples, i * N_examples + i2 + 1)
-            x = np.array(X_test_norm[idx[i2], :, :, :])
+            ax1 = fig.add_subplot(len(idx_groups), N_examples, i * N_examples + i2 + 1)
+            x = np.array(X[idx[i2], :, :, :])
             xn = np.uint8(x / x.max() * 255)
             img = Image.fromarray(xn, mode='RGB')
             ax1.imshow(img)
@@ -287,7 +299,17 @@ if __name__ == '__main__':
                      max_fpr_tollerance=0.01)
 
     # show examples of false positives and negatives
-    plot_example_classes(y_pred, y_test, N_examples = 3, filename='examples.png')
+    plot_example_classes(X_test_norm, y_pred, y_test,
+                         N_examples=3, filename='examples.png',
+                         idx_custom=None, labels_custom=None)
+
+    # just plot some of the original samples
+    plot_example_classes(X_test_norm,
+                         None, None,
+                         idx_custom=[[1,2,3],[4,5,6],[7,8,9]],
+                         labels_custom=['','',''],
+                         N_examples = 3,
+                         filename='input_examples.png')
 
 
 
