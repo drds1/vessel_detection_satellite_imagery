@@ -12,6 +12,7 @@ import pickle
 import os
 from sklearn import metrics
 from PIL import Image
+from keras_sequential_ascii import keras2ascii
 
 def load_data_from_json(file = './data/shipsnet.json'):
     '''
@@ -286,6 +287,11 @@ if __name__ == '__main__':
 
     # define the model
     model = define_custom_convnet()
+
+    #summarise
+    keras2ascii(model)
+
+    #fit or load pre-trained model
     model = fit_load_model(X_train_norm, y_train,
                               new_model=False,
                               picklefile='./models/custom_convnet.pickle',
