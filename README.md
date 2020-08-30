@@ -65,13 +65,4 @@ The model is split 70 / 30 into build and holdout samples. The trained model
 is scored on the holdout data with an expected sensitivity 
 of 93% assuming a max tolerable false positive rate of 1%.
 
-
-### Benchmark against other classifiers
-
-
-The custom util scripts also assess the performance of the 
-model and later benchmarks it against other classifiers. 
-The [Receiver Operating Characteristic](https://en.wikipedia.org/wiki/Receiver_operating_characteristic)  will be used 
-to assess performance which finds an expected sensitivity of 93% assuming a max 
-tolerable false positive rate of 1%. 
-The notebook is separated into two sections
+![](https://github.com/dstarkey23/transfer_learning_computer_vision/blob/master/roc_plot.png)
