@@ -18,6 +18,7 @@ from sklearn.metrics import plot_confusion_matrix
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.pipeline import Pipeline
 from keras.applications.resnet50 import ResNet50
+from keras.applications.mobilenet_v2 import mobilenet_v2
 
 def get_label_from_filename(data_dir = './data/images/shipsnet/shipsnet/'):
     '''
@@ -140,6 +141,7 @@ def define_resnet_model():
     :return:
     '''
     base_model = ResNet50(weights='imagenet')
+    #base_model = mobilenet_v2#(weights='imagenet')
     base_model.trainable = False
     output_model = keras.Sequential()
     output_model.add(keras.layers.Dense(32, activation='relu'))
@@ -300,12 +302,13 @@ if __name__ == '__main__':
     plot_example_rgb(X_train_norm_resize[0, :, :, :], savefile='normed_resized_image_example.png')
 
     #assemble model using transfer learning approach using resnet50 and output sequential mode
+    #all keras models https://keras.io/api/applications/
     #tl_model = define_resnet_model()
     #tl_model = fit_load_model(X_train_norm_resize,y_train,
     #                          new_model=True,
     #                          picklefile ='./models/tl_resnet.pickle',
     #                          input_model= tl_model)
-#
+##
     ## fit model on test data
     #y_pred_tl = tl_model.predict(X_test_norm)
     #diagnostic_plots(y_pred_tl, y_test,
