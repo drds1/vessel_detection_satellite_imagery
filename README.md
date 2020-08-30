@@ -8,7 +8,7 @@ The labelled [dataset](https://www.kaggle.com/rhammell/ships-in-satellite-imager
 contains 4000 (80 X 80 X 3) images stored in json format 
 with a few examples shown below.
 
-![](https://github.com/dstarkey23/transfer_learning_computer_vision/blob/master/input_examples.png)
+![](https://github.com/dstarkey23/transfer_learning_computer_vision/blob/master/images/input_examples.png)
 
 
 
@@ -61,4 +61,4 @@ The model is split 70 / 30 into build and holdout samples. The trained model
 is scored on the holdout data with an expected sensitivity 
 of 93% assuming a max tolerable false positive rate of 1%.
 
-![](https://github.com/dstarkey23/transfer_learning_computer_vision/blob/master/roc_plot.png)
+![](https://github.com/dstarkey23/transfer_learning_computer_vision/blob/master/images/roc_plot.png)
