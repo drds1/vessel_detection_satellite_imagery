@@ -5,71 +5,53 @@
 
 import numpy as np
 import matplotlib.pylab as plt
-import pandas as pd
-import glob
 import json
 from sklearn.model_selection import train_test_split
 import keras
 import pickle
 import os
-from PIL import Image
 from sklearn import metrics
-from sklearn.metrics import plot_confusion_matrix
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.pipeline import Pipeline
-from keras.applications.resnet50 import ResNet50
-from keras.applications.mobilenet_v2 import mobilenet_v2
 
 def load_data_from_json(file = './data/shipsnet.json'):
     '''
-
+    load input data and target labels from json at location specified by
+    file argument.
+    :return:
+    X[N, img_width, img_height, color channels]: image pixels
+    target[N]: 1 / 0 labels
     :return:
     '''
     # download dataset from json object
     f = open(file)
-    dataset = json.load(f)
+    data = json.load(f)
     f.close()
 
-    # load input and output data
-    input_data = np.array(dataset['data']).astype('uint8')
-    output_data = np.array(dataset['labels']).astype('uint8')
+    # Ingest images and labels
+    input_data = np.array(data['data']).astype('uint8')
+    output_data = np.array(data['labels']).astype('uint8')
 
-    # input data has been flattened in the json but
-    # is actually a 80x80x3 image. reshape here
-    n_spectrum = 3  # color chanel (RGB)
-    weight = 80
-    height = 80
-    X = input_data.reshape([-1, n_spectrum, weight, height])
+    # Json input images are all 1D. Need to convert into (80, 80, 3)
+    # final 3rd dim colour channel (RGB)
+    X = input_data.reshape([-1, 3, 80, 80])
+    # reorder indices for required keras input format
     X = np.transpose(X, (0, 2, 3, 1))
     return X, output_data
 
 
-
 def plot_example_rgb(pic, savefile=None):
     '''
-    input example X image pic[X,Y,z]
+    Plot all channels of input image
     :return:
     '''
-
-    # get one chanel
-    #pic = X[0]
     plt.close()
-    rad_spectrum = pic[:,:,0]
-    green_spectrum = pic[:,:,1]
-    blue_spectum = pic[:,:,2]
-
-    plt.figure(2, figsize=(5 * 3, 5 * 1))
-    plt.set_cmap('jet')
-
-    # show each channel
-    plt.subplot(1, 3, 1)
-    plt.imshow(rad_spectrum)
-
-    plt.subplot(1, 3, 2)
-    plt.imshow(green_spectrum)
-
-    plt.subplot(1, 3, 3)
-    plt.imshow(blue_spectum)
+    labels = ['Red','Greed','Blue']
+    fig = plt.figure()
+    for i in range(np.shape(pic)[2]):
+        pixels = pic[:,:,i]
+        ax1 = fig.add_subplot(3,1,i+1)
+        ax1.imshow(pixels,cmap='Blues')
+        ax1.set_title(labels[i])
+    plt.tight_layout()
     if savefile is None:
         plt.show()
     else:
@@ -78,7 +60,39 @@ def plot_example_rgb(pic, savefile=None):
 
 
 
-def define_custom_convnet():
+def conv_pool_dropout_block(modelin,
+                            input_shape = None,
+                            Nfilters = 32,
+                            filtersize = (3, 3),
+                            poolsize = (2, 2),
+                            padding = 'same',
+                            activation = 'relu',
+                            dropout_frac = 0.3):
+    '''
+    Sequential conv, pooling and dropout layers tend to perform well
+    in classification problems
+    :param modelin:
+    :param filtersize:
+    :param poolsize:
+    :param padding:
+    :return:
+    '''
+    model = modelin
+    if input_shape is not None:
+        model.add(keras.layers.Conv2D(Nfilters, filtersize,
+                                      padding=padding,
+                                      input_shape=input_shape,
+                                      activation=activation))
+    else:
+        model.add(keras.layers.Conv2D(Nfilters, filtersize,
+                                      padding=padding,
+                                      activation=activation))
+    model.add(keras.layers.MaxPooling2D(pool_size=poolsize))  # 40x40
+    model.add(keras.layers.Dropout(dropout_frac))
+    return model
+
+
+def define_custom_convnet(image_dim = (80,80,3)):
     '''
     convnet with 4 sequential conv, max-pool, dropout layers
     :return:
@@ -87,26 +101,25 @@ def define_custom_convnet():
     # network design
     model = keras.Sequential()
 
-    model.add(keras.layers.Conv2D(32, (3, 3), padding='same', input_shape=(80, 80, 3), activation='relu'))
-    model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))  # 40x40
-    model.add(keras.layers.Dropout(0.25))
+    #apply 4 conv blocks
+    for i in range(4):
+        if i == 0:
+            input_shape = image_dim
+        else:
+            input_shape = None
+        model = conv_pool_dropout_block(model,
+                                input_shape = input_shape,
+                                Nfilters=32,
+                                filtersize=(3, 3),
+                                poolsize=(2, 2),
+                                padding='same',
+                                activation='relu',
+                                dropout_frac=0.3)
 
-    model.add(keras.layers.Conv2D(32, (3, 3), padding='same', activation='relu'))
-    model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))  # 20x20
-    model.add(keras.layers.Dropout(0.25))
-
-    model.add(keras.layers.Conv2D(32, (3, 3), padding='same', activation='relu'))
-    model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))  # 10x10
-    model.add(keras.layers.Dropout(0.25))
-
-    model.add(keras.layers.Conv2D(32, (10, 10), padding='same', activation='relu'))
-    model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))  # 5x5
-    model.add(keras.layers.Dropout(0.25))
-
+    #apply ouptput classifier layers
     model.add(keras.layers.Flatten())
-    model.add(keras.layers.Dense(512, activation='relu'))
+    model.add(keras.layers.Dense(32, activation='relu'))
     model.add(keras.layers.Dropout(0.5))
-
     model.add(keras.layers.Dense(2, activation='softmax'))
 
     # optimization setup
@@ -117,46 +130,6 @@ def define_custom_convnet():
         metrics=['accuracy'])
     return model
 
-
-def define_resnet_model():
-    '''
-
-    :return:
-    '''
-    base_model = ResNet50(weights='imagenet')
-    #base_model = mobilenet_v2#(weights='imagenet')
-    base_model.trainable = False
-    output_model = keras.Sequential()
-    output_model.add(keras.layers.Dense(32, activation='relu'))
-    output_model.add(keras.layers.Dense(2, activation='softmax'))
-    tl_model = keras.Sequential()
-    tl_model.add(base_model)
-    tl_model.add(output_model)
-    sgd = keras.optimizers.SGD(lr=0.01, momentum=0.9, nesterov=True)
-    tl_model.compile(
-        loss='categorical_crossentropy',
-        optimizer=sgd,
-        metrics=['accuracy'])
-    return tl_model
-
-
-
-def convert_image_dimensions(X_train_norm, newsize=(224,224)):
-    '''
-    resize image using PIL (resnet 50 needs 224 by 224)
-    :param X_train_norm:
-    :param newsize:
-    :return:
-    '''
-    N = np.shape(X_train_norm)[0]
-    X_train_norm_resize = np.zeros((N,newsize[0],newsize[1],3))
-    for i in range(N):
-        x = np.array(X_train_norm[i, :, :, :])
-        xn = np.uint8( x / x.max()* 255 )
-        img = Image.fromarray(xn, mode='RGB')
-        img2 = img.resize(newsize, Image.ANTIALIAS)
-        X_train_norm_resize[i,:,:,:] = np.array(img2)
-    return X_train_norm_resize
 
 def diagnostic_plots(y_pred_probs,y_test_probs,
                      labels_in = None,
@@ -263,8 +236,8 @@ if __name__ == '__main__':
     # define the model
     model = define_custom_convnet()
     model = fit_load_model(X_train_norm, y_train,
-                              new_model=False,
-                              picklefile='./models/custom_convnet.pickle',
+                              new_model=True,
+                              picklefile='./models/custom_convnet_2.pickle',
                               input_model=model)
 
     # score model on test data
@@ -273,42 +246,3 @@ if __name__ == '__main__':
                      labels_in=None,
                      diagnostic_file='roc_plot.png',
                      max_fpr_tollerance=0.01)
-
-
-
-
-    #now try resnet 50 transfer learning model
-    #resnet 50 needs image sizes to be 224 x 224
-    #use python image library PIL to resize
-    X_train_norm_resize = convert_image_dimensions(X_train_norm, newsize=(224, 224))
-    plot_example_rgb(X_train_norm[0,:,:,:], savefile='normed_image_example.png')
-    plot_example_rgb(X_train_norm_resize[0, :, :, :], savefile='normed_resized_image_example.png')
-
-    #assemble model using transfer learning approach using resnet50 and output sequential mode
-    #all keras models https://keras.io/api/applications/
-    #tl_model = define_resnet_model()
-    #tl_model = fit_load_model(X_train_norm_resize,y_train,
-    #                          new_model=True,
-    #                          picklefile ='./models/tl_resnet.pickle',
-    #                          input_model= tl_model)
-##
-    ## fit model on test data
-    #y_pred_tl = tl_model.predict(X_test_norm)
-    #diagnostic_plots(y_pred_tl, y_test,
-    #                 labels_in=None,
-    #                 diagnostic_file='roc_plot_tl.png',
-    #                 max_fpr_tollerance=0.01)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
