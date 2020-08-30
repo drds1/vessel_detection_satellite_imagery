@@ -142,7 +142,6 @@ def define_resnet_model():
     base_model = ResNet50(weights='imagenet')
     base_model.trainable = False
     output_model = keras.Sequential()
-    output_model.add(keras.layers.GlobalAveragePooling2D())
     output_model.add(keras.layers.Dense(32, activation='relu'))
     output_model.add(keras.layers.Dense(2, activation='softmax'))
     tl_model = keras.Sequential()
@@ -154,6 +153,7 @@ def define_resnet_model():
         optimizer=sgd,
         metrics=['accuracy'])
     return tl_model
+
 
 
 def convert_image_dimensions(X_train_norm, newsize=(224,224)):
@@ -314,11 +314,26 @@ if __name__ == '__main__':
     plot_example_rgb(X_train_norm[0,:,:,:], savefile='normed_image_example.png')
     plot_example_rgb(X_train_norm_resize[0, :, :, :], savefile='normed_resized_image_example.png')
 
+    #test resnet model
+    base_model = ResNet50(weights='imagenet')
+    base_model.trainable = False
+    output_model = keras.Sequential()
+    output_model.add(keras.layers.Dense(32, activation='relu'))
+    output_model.add(keras.layers.Dense(2, activation='softmax'))
+    tl_model = keras.Sequential()
+    tl_model.add(base_model)
+    tl_model.add(output_model)
+    sgd = keras.optimizers.SGD(lr=0.01, momentum=0.9, nesterov=True)
+    tl_model.compile(
+        loss='categorical_crossentropy',
+        optimizer=sgd,
+        metrics=['accuracy'])
+
     #assemble model using transfer learning approach using resnet50 and output sequential mode
-    tl_model = define_resnet_model()
-    tl_model = fit_load_model(new_model=True,
-                   picklefile ='./models/tl_resnet.pickle',
-                   input_model= tl_model)
+    #tl_model = define_resnet_model()
+    #tl_model = fit_load_model(new_model=True,
+    #               picklefile ='./models/tl_resnet.pickle',
+    #               input_model= tl_model)
 
 
     # analyse performance using ROC curve
