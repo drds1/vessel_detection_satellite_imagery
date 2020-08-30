@@ -11,7 +11,7 @@ with a few examples shown below.
 ![](https://github.com/dstarkey23/transfer_learning_computer_vision/blob/master/images/input_examples.png)
 
 
-
+ 
 ### Model Summary - See also kaggle notebook
 
 The approach uses a [CNN](https://towardsdatascience.com/a-comprehensive-guide-to-convolutional-neural-networks-the-eli5-way-3bd2b1164a53) model built using Python's [keras](https://keras.io/) library with a softmax 
