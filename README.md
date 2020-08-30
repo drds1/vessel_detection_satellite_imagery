@@ -8,6 +8,8 @@ The labelled [dataset](https://www.kaggle.com/rhammell/ships-in-satellite-imager
 contains 4000 (80 X 80 X 3) images stored in json format 
 with a few examples shown below.
 
+![](https://github.com/dstarkey23/transfer_learning_computer_vision/blob/master/input_examples.png)
+
 
 
 ### Model Summary
