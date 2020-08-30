@@ -135,7 +135,7 @@ def define_custom_convnet(image_dim = (80,80,3)):
 
 def diagnostic_plots(y_pred_probs,y_test_probs,
                      labels_in = None,
-                     diagnostic_file = 'roc_plot.png',
+                     diagnostic_file = './images/roc_plot.png',
                      max_fpr_tollerance = 0.01):
     '''
 
@@ -212,7 +212,7 @@ def fit_load_model(X_train_norm, y_train,
     return model
 
 
-def plot_example_classes(X, y_pred=None, y_test=None, N_examples = 3, filename='examples.png',
+def plot_example_classes(X, y_pred=None, y_test=None, N_examples = 3, filename='./images/examples.png',
                          idx_custom = None, labels_custom = None):
     '''
     show some example classifications demonstrating where the CNN
@@ -273,7 +273,7 @@ if __name__ == '__main__':
     y = keras.utils.np_utils.to_categorical(target)
 
     # plot image file
-    plot_example_rgb(X[0], savefile = 'example_input.png')
+    plot_example_rgb(X[0], savefile = './images/example_input.png')
 
     # split into train test data
     X_train, X_test, y_train, y_test = train_test_split(X, y,
@@ -301,12 +301,12 @@ if __name__ == '__main__':
     y_pred = model.predict(X_test_norm)
     diagnostic_plots(y_pred, y_test,
                      labels_in=None,
-                     diagnostic_file='roc_plot.png',
+                     diagnostic_file='./images/roc_plot.png',
                      max_fpr_tollerance=0.01)
 
     # show examples of false positives and negatives
     plot_example_classes(X_test_norm, y_pred, y_test,
-                         N_examples=3, filename='examples.png',
+                         N_examples=3, filename='./images/examples.png',
                          idx_custom=None, labels_custom=None)
 
     # just plot some of the original samples
@@ -315,7 +315,7 @@ if __name__ == '__main__':
                          idx_custom=[[1,2,3],[4,5,6],[7,8,9]],
                          labels_custom=['','',''],
                          N_examples = 3,
-                         filename='input_examples.png')
+                         filename='./images/input_examples.png')
 
 
 

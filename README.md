@@ -12,8 +12,8 @@ with a few examples shown below.
 
 
 
-### Model Summary
-The Kaggle notebook documents the full methodology. Here I give a brief summary. 
+### Model Summary - See also kaggle notebook
+
 The approach uses a [CNN](https://towardsdatascience.com/a-comprehensive-guide-to-convolutional-neural-networks-the-eli5-way-3bd2b1164a53) model built using Python's [keras](https://keras.io/) library with a softmax 
 output layer to predict the probability of each outcome (vessel or no vessel). The full architecture is as follows:
 
