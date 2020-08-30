@@ -300,18 +300,18 @@ if __name__ == '__main__':
     plot_example_rgb(X_train_norm_resize[0, :, :, :], savefile='normed_resized_image_example.png')
 
     #assemble model using transfer learning approach using resnet50 and output sequential mode
-    tl_model = define_resnet_model()
-    tl_model = fit_load_model(X_train_norm_resize,y_train,
-                              new_model=True,
-                              picklefile ='./models/tl_resnet.pickle',
-                              input_model= tl_model)
-
-    # fit model on test data
-    y_pred_tl = tl_model.predict(X_test_norm)
-    diagnostic_plots(y_pred_tl, y_test,
-                     labels_in=None,
-                     diagnostic_file='roc_plot_tl.png',
-                     max_fpr_tollerance=0.01)
+    #tl_model = define_resnet_model()
+    #tl_model = fit_load_model(X_train_norm_resize,y_train,
+    #                          new_model=True,
+    #                          picklefile ='./models/tl_resnet.pickle',
+    #                          input_model= tl_model)
+#
+    ## fit model on test data
+    #y_pred_tl = tl_model.predict(X_test_norm)
+    #diagnostic_plots(y_pred_tl, y_test,
+    #                 labels_in=None,
+    #                 diagnostic_file='roc_plot_tl.png',
+    #                 max_fpr_tollerance=0.01)
 
 
 
