@@ -62,3 +62,27 @@ is scored on the holdout data with an expected sensitivity
 of 93% assuming a max tolerable false positive rate of 1%.
 
 ![](https://github.com/dstarkey23/transfer_learning_computer_vision/blob/master/images/roc_plot.png)
+
+
+
+### Misclassifications
+
+By examining the false positive / negative classifications, 
+we can try to understand the features in images that might lead the model to
+misclassify a particular image. A few of these are plotted below.
+
+![](https://github.com/dstarkey23/transfer_learning_computer_vision/blob/master/images/examples.png)
+
+We see the model correctly identifies when we are looking at empty see or some other landmass
+(i.e. an empty birth or building or road). This is good. Unfortunately the model appears to interpret
+ship-to-ship moorings (when two vessels dock with each other) as an alien structure and cannot
+discern the docked vessels as individual ships. Other misclassifications occur when a vessel is
+half in the frame and half out. It seems from the far-right true negative panel that the labels
+are defined to exclude ships partially in-frame. Ships that are almost fully in-frame 
+(as shown in the right false positive panel) are considered as vessels by the model but labelled as 'not vessels'
+during training. Edge cases such as these, where the label is a little muddled, will naturally confuse the CNN
+and lead to such misclassifications. Despite these shortcomings, we see that the model on the hole identifies vessels 
+in satellite images with exceptional performance. 
+
+Thanks for reading! Please feel free to get in touch and suggest tweaks to the approach
+or areas for performance uplift.
