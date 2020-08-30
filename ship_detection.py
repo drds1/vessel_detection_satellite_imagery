@@ -225,9 +225,10 @@ def diagnostic_plots(y_pred_probs,y_test_probs,
     plt.savefig(diagnostic_file)
 
 
-def fit_load_model(new_model=False,
+def fit_load_model(X_train_norm, y_train,
+                   new_model=False,
                    picklefile='./models/custom_convnet.pickle',
-                   input_model=define_custom_convnet()):
+                   input_model=None):
     '''
     fit or load a new model from file
     :return:
@@ -275,29 +276,13 @@ if __name__ == '__main__':
     X_test_norm = X_test/norm
 
     # define the model
-    new_model = False
-    picklefile = './models/custom_convnet.pickle'
-    if new_model is True:
-        model = define_custom_convnet()
-#
-        # fit the model
-        model.fit(X_train_norm, y_train,
-                  batch_size=32,
-                  epochs=18,
-                  validation_split=0.2,
-                  shuffle=True,
-                  verbose=2)
-#
-        #pickle the fitted model
-        os.system('rm ' + picklefile)
-        pickle_out = open(picklefile, "wb")
-        pickle.dump({'model': model}, pickle_out)
-        pickle_out.close()
-    else:
-        model = pickle.load(open(picklefile, "rb"))['model']
+    model = define_custom_convnet()
+    model = fit_load_model(X_train_norm, y_train,
+                              new_model=False,
+                              picklefile='./models/tl_resnet.pickle',
+                              input_model=model)
 
-
-    # fit model on test data
+    # score model on test data
     y_pred = model.predict(X_test_norm)
     diagnostic_plots(y_pred, y_test,
                      labels_in=None,
@@ -314,26 +299,12 @@ if __name__ == '__main__':
     plot_example_rgb(X_train_norm[0,:,:,:], savefile='normed_image_example.png')
     plot_example_rgb(X_train_norm_resize[0, :, :, :], savefile='normed_resized_image_example.png')
 
-    #test resnet model
-    base_model = ResNet50(weights='imagenet')
-    base_model.trainable = False
-    output_model = keras.Sequential()
-    output_model.add(keras.layers.Dense(32, activation='relu'))
-    output_model.add(keras.layers.Dense(2, activation='softmax'))
-    tl_model = keras.Sequential()
-    tl_model.add(base_model)
-    tl_model.add(output_model)
-    sgd = keras.optimizers.SGD(lr=0.01, momentum=0.9, nesterov=True)
-    tl_model.compile(
-        loss='categorical_crossentropy',
-        optimizer=sgd,
-        metrics=['accuracy'])
-
     #assemble model using transfer learning approach using resnet50 and output sequential mode
     tl_model = define_resnet_model()
-    tl_model = fit_load_model(new_model=True,
-                   picklefile ='./models/tl_resnet.pickle',
-                   input_model= tl_model)
+    tl_model = fit_load_model(X_train_norm_resize,y_train,
+                              new_model=True,
+                              picklefile ='./models/tl_resnet.pickle',
+                              input_model= tl_model)
 
     # fit model on test data
     y_pred_tl = tl_model.predict(X_test_norm)
